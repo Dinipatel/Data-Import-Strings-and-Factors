@@ -1,0 +1,196 @@
+---
+title: "Patel_D_4_DA5020 Homework 4: Strings and Factors""
+author: "Patel Dinal"
+date: "1/30/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("readxl")
+library(tidyverse)
+library(stringr)
+```
+
+## R Markdown
+
+
+```{r}
+Farmers_Market <- read.csv("farmers_market.csv",header=TRUE,stringsAsFactors = FALSE)
+#str(Farmers_Market)
+```
+
+# Warm up
+This dataset stores city and state in different columns, what if you want to
+print out city and state in the format "City, State"?
+```{r}
+warm_up <- unite(Farmers_Market,City_State,city,State, sep = ",",remove = FALSE)
+warm_up
+```
+
+#Question 1
+1. (20 points) Cleanup the `Facebook` and `Twitter` column to let them contain only the facebook username or twitter handle name. I.e., replace "https://www.facebook.com/pages/Cameron-Park-Farmers-Market/97634216535?ref=hl" with "Cameron-Park-Farmers-Market", "https://twitter.com/FarmMarket125th" with "FarmMarket125th", and "\@21acres" with "21acres".
+```{r}
+Farmers_Market$Facebook<- trimws(Farmers_Market$Facebook) # removing trailing space
+ Farmers_Market$Facebook<-str_replace(Farmers_Market$Facebook, ".*facebook.com/","") #removing ".*facebook.com"
+ Farmers_Market$Facebook<-str_replace(Farmers_Market$Facebook, "facebook.com|https:|-\\d+","") #removing "facebook.com|https:|-\\d+"
+  Farmers_Market$Facebook<-str_replace(Farmers_Market$Facebook, "@|\\?.*","") #removing "@|\\?.*"
+ Farmers_Market$Facebook<-str_replace(Farmers_Market$Facebook, ".*pages/","") #removing ".*pages/"
+  Farmers_Market$Facebook<-str_replace(Farmers_Market$Facebook, "/.*","") #removing "/.*"
+Farmers_Market$Facebook
+
+Farmers_Market$Twitter<- trimws(Farmers_Market$Twitter) #removing trailing space 
+Farmers_Market$Twitter<- str_replace(Farmers_Market$Twitter, ".*/","") #removing ".*/"
+Farmers_Market$Twitter<- str_replace(Farmers_Market$Twitter, "@","")  #removing "@"
+Farmers_Market$Twitter
+```
+
+#Question 2
+2. (20 points) Clean up the `city` and `street` column. Remove state and county names from the `city` column and consolidate address spellings to be more consistent (e.g. "St.", "ST.", "Street" all become "St"; "and" changes to "&", etc...).
+```{r}
+#Cleaning up city column
+#number of rows in Farmers Market data
+Farmers_Market$city<- trimws(Farmers_Market$city)
+ Farmers_Market$city<-str_replace(Farmers_Market$city, ",.*|\\s\\w\\w$","") #removing any county or state name after ","
+ Farmers_Market$city
+```
+#Question 2 continued
+#Cleaning up street column
+```{r}
+Farmers_Market$street<- trimws(Farmers_Market$street) #removing trailing space
+# replacing all forms of streets to "St"
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Streets",ignore_case = TRUE),"St")
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Street",ignore_case = TRUE),"St")
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("St\\.",ignore_case = TRUE),"St")
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Sts\\.",ignore_case = TRUE),"St")
+Farmers_Market$street <- str_replace(Farmers_Market$street,"ST","St")
+#replacing all forms of Avenue to "Ave"
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Avenue",ignore_case = TRUE),"Ave")
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Avenues",ignore_case = TRUE),"Ave")
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Avenue's",ignore_case = TRUE),"Ave")
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Ave\\.",ignore_case = TRUE),"Ave")
+Farmers_Market$street <- str_replace(Farmers_Market$street,"AVE","Ave")
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Aves",ignore_case = TRUE),"Ave")
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Aves\\.",ignore_case = TRUE),"Ave")
+#replacing all forms of and to "&"
+Farmers_Market$street <- str_replace(Farmers_Market$street,"and","&")
+#replacing all forms of road to "Rd"
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Road",ignore_case = TRUE),"Rd")
+Farmers_Market$street <- str_replace(Farmers_Market$street,"RD","Rd")
+#replacing all forms of boulevard to "Blvd"
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Boulevard",ignore_case = TRUE),"Blvd")
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Blvd\\.",ignore_case = TRUE),"Blvd")
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Blvd",ignore_case = TRUE),"Blvd")
+#replacing all forms of route to "Rt"
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Route",ignore_case = TRUE),"Rt")
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Rt\\.",ignore_case = TRUE),"Rt")
+Farmers_Market$street <- str_replace(Farmers_Market$street,regex("Rte",ignore_case = TRUE),"Rt")
+Farmers_Market$street <- str_replace(Farmers_Market$street,"RT","Rt")
+Farmers_Market$street
+
+```
+
+#Question 3
+3. (20 points) Create a new data frame (tibble) that explains the online presence of each state's farmers market. I.e., how many percentages of them have a facebook account? A twitter account? Or either of the accounts? (Hint: use the `is.na()` function)
+```{r}
+#For Facebook
+sum(is.na(Farmers_Market$Facebook)) # checking if there is "NA" data 
+# No "NA" found to going to next step
+# converting "none","None","No" or "no" to empty space so that can be counted as not users of facebook
+n <- nrow(Farmers_Market)
+for (i in 1:n) {
+ if (Farmers_Market$Facebook[i] == "None") {
+  Farmers_Market$Facebook[i] <- ""
+ }
+  if (Farmers_Market$Facebook[i] == "no") {
+  Farmers_Market$Facebook[i] <- ""
+  }
+   if (Farmers_Market$Facebook[i] == "none") {
+  Farmers_Market$Facebook[i] <- ""
+ }
+  if (Farmers_Market$Facebook[i] == "No") {
+ Farmers_Market$Facebook[i] <- ""
+  }
+}
+#For Twitter
+sum(is.na(Farmers_Market$Twitter))# checking if there is "NA" data 
+#replacing "NA" with empty space
+Farmers_Market$Twitter <- ifelse (is.na(Farmers_Market$Twitter),"",Farmers_Market$Twitter)
+# converting "none","None","No" or "no" to empty space so that can be counted as not users of twitter
+for (i in 1:n) {
+ if (Farmers_Market$Twitter[i] == "None") {
+  Farmers_Market$Twitter[i] <- ""
+ }
+  if (Farmers_Market$Twitter[i] == "no") {
+  Farmers_Market$Twitter[i] <- ""
+  }
+   if (Farmers_Market$Twitter[i] == "none") {
+  Farmers_Market$Twitter[i] <- ""
+ }
+  if (Farmers_Market$Twitter[i] == "No") {
+ Farmers_Market$Twitter[i] <- ""
+  }
+}
+#combining columns of facebook and twitter 
+Farmers_Market$Fac_Twit <- paste(Farmers_Market$Facebook,Farmers_Market$Twitter)
+sum(is.na(Farmers_Market$Fac_Twit)) #checking for "NA" data
+# Replacing all the empty spaces with "NA" is.na can be used to count the number of users
+for (i in 1:n) {
+ if (Farmers_Market$Facebook[i] == "") {
+  Farmers_Market$Facebook[i] <- NA
+ }
+}  
+sum(is.na(Farmers_Market$Facebook))
+
+for (i in 1:n) {
+ if (Farmers_Market$Twitter[i] == "") {
+  Farmers_Market$Twitter[i] <- NA
+ }
+}
+sum(is.na(Farmers_Market$Twitter))
+
+ Farmers_Market$Fac_Twit<- trimws(Farmers_Market$Fac_Twit)
+ for (i in 1:n) {
+ if (Farmers_Market$Fac_Twit[i] == "") {
+  Farmers_Market$Fac_Twit[i] <- NA
+ }
+ }
+ sum(is.na(Farmers_Market$Fac_Twit))
+#Farmers_Market$Facebook <- str_replace(Farmers_Market$Facebook," ","NA")
+by_state <- group_by(Farmers_Market,Farmers_Market$State)
+# summarise will give the percent of facebook users, twitter users and facebook or twitter users per state 
+summarise(by_state, Percent_Facebook_Users = (sum(!is.na(Facebook))/length(Facebook))*100, Percent_Twitter_Users = (sum(!is.na(Twitter))/length(Twitter))*100, Percent_Fcbk_or_Twtr_Users = (sum(!is.na(Fac_Twit))/length(Fac_Twit))*100)
+
+```
+
+#Question 4
+4. (20 points) 
+    Some of the location names are quite long. Can you make them shorter by using the `forcats::fct_recode` function? Create a plot that demonstrates the number of farmers markets per location type. The locations should be ordered in descending order where the top of the graph will have the one with the highest number of markets.
+```{r}
+ Farmers_Market$Location <- factor(Farmers_Market$Location)
+levels(Farmers_Market$Location)
+Farmers_Market$Location <- fct_recode(Farmers_Market$Location, "No Location" = "", "Public Street" = "Closed-off public street", "Wholesale Market" = "Co-located with wholesale market facility", "Faith-based institution" = "Faith-based institution (e.g., church, mosque, synagogue, temple)", "Government building" = "Federal/State government building grounds", "Local government building" = "Local government building grounds", "Farm" = "On a farm from: a barn, a greenhouse, a tent, a stand, etc", "Parking Lot" = "Private business parking lot")
+ levels(Farmers_Market$Location)
+ Location_Summary <- Farmers_Market %>%
+   group_by(Location) %>%
+  summarise(Number_Markets = length(MarketName))
+ ggplot(Location_Summary, aes(Number_Markets,fct_reorder(Location,Number_Markets))) + geom_point()
+ 
+ 
+```
+
+#Question 5
+5. (20 points) Write code to sanity check the `kyfprojects` data. For example, does `Program Abbreviation` always match `Program Name` for all the rows? (Try thinking of your own rules, too.)
+```{r}
+kyfProjects <- read_excel("kyfprojects.xls")
+
+by_program <- group_by(kyfProjects,kyfProjects$`Program Name`)
+
+compare_name <- as.tibble(count(by_program,`Program Name`)) # We count the number of programs for each program name
+compare_abrv <- as.tibble(count(by_program,`Program Abbreviation`)) # We count the number of programs for each program abbreviation
+# Then we compare the number of programs per program name and number of programs per program abbreviation and if they are same then we can say that program abbreviations match correctly with the program names in each row
+which(compare_name$n != compare_abrv$n)
+# it gives zero so program abbreviations match correctly with the program names in each row
+```
+
+
